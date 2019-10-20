@@ -1,6 +1,9 @@
 import json
 import requests
 import APIFunctions
+import pprint 
+import random 
+
 #--- api url , key, and specific request TEST---
 api_url = ("https://www.thecocktaildb.com/api/json/v2/9973533/")
 request = ("search.php?s=gin")
@@ -81,10 +84,11 @@ def category(ans, ans2):
 		#print(category_response_data)
 		#print(request_id)
 		#print(request)
-		#if category_response_data['drinks'][drink_counter]["strCategory"] is not ans2:
-			#del category_response_data['drinks'][drink_counter] 
+		if category_response_data['drinks'][drink_counter - 1]["strCategory"] == ans2:
+			del category_response_data['drinks'][drink_counter]
+			print("matches")
 		drink_counter += 1
-	print(category_response_data['drinks'][0]["strDrink"])
+	print(category_response_data)
 	
 		#category_dict[category_data["drinks"][drink_counter]["idDrink"]] = category_data["drinks"][drink_counter]["strDrink"]
 		#x = x + 1 
@@ -139,3 +143,36 @@ def category(ans, ans2):
 		print("End of it")
 
 """
+def popular_drinks():
+	reqeuest = ("popular.php")
+	response = requests.get(api_url+request)
+	popular_drinks_selection = response.json()
+	return popular_drinks_selection
+
+# --- Yelp API --- 
+
+yelp_key = "bc6utOfTROBnI9OqigAJDY5Kh0nY7K5y3h5TCMWCobHpq0DZZVTj1QsdMw0ZTgZikrk3sutTE5waspolZnH-YoCJWuut0J_Sagvf3ZPbABUxmWDmnJiZ4tMpQBh5XXYx"
+headers = {'Authorization': 'Bearer %s' % yelp_key}
+yelp_url='https://api.yelp.com/v3/businesses/search'
+
+def planmynight(zip):
+	# random bar based on zipcode
+	random_bar_counter = 0 
+	random_drink_counter = 0 
+	params = {'term':'bar','location' : zip}
+	req = requests.get(yelp_url, params=params, headers=headers)
+	yelp_data = json.loads(req.content)
+	while random_bar_counter <= 5:
+		random_bar = random.choice(yelp_data['businesses'])
+		#return random_bar
+		pprint.pprint(random_bar)
+		random_bar_counter += 1 
+	# random drink 
+	request = ("random.php")
+	response = requests.get(api_url+request)
+	while random_drink_counter <= 5:
+		random_drink = response.json()
+		pprint.pprint(random_drink)
+		#return random_drink
+		random_drink_counter += 1
+	#pprint.pprint(random_bar)
