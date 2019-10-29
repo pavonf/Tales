@@ -8,146 +8,96 @@ import random
 api_url = ("https://www.thecocktaildb.com/api/json/v2/9973533/")
 request = ("search.php?s=gin")
 
-# --- just print url and response code --- 
-#print(api_url+request)
-#response = requests.get(api_url+request)
-
-# Json attributes and store dict in data
-"""
-print(response.status_code)
-print ("cotent type:" + response.headers['content-type'])
-data = response.json()
-print(type(data))
-
-# iterate through dictionary (based on gin drinks) and printing out certain keys 
-
-i = 0 
-for drink in data['drinks']:
-	print(data["drinks"][i]["idDrink"])
-	print(data["drinks"][i]["strDrink"])
-	print(data["drinks"][i]["strCategory"])
-	print(data["drinks"][i]["strAlcoholic"])
-	print(data["drinks"][i]["strGlass"])
-	print(data["drinks"][i]["strInstructions"])
-	print(data["drinks"][i]["strDrinkThumb"])
-	print("")
-	i = i + 1
-"""
 # --- FUNCTION : format JSON data to view ONLY --- 
 def jprint(obj):
 	text = json.dumps(obj, sort_keys=True, indent=4)
 	print(text)
-
-#jprint(response.json())
-
 #------------------------------------------------------
 
 # --- Alcoholic or non alchoholic function --- 
 def alcoholic(ans):
 	#ans = ans.casefold()
-	if ans == "no":
+	if ans == "nonalcoholic":
 		#Alcoholic_dict = {}
 		request = ("filter.php?a=Non_Alcoholic")
 		response = requests.get(api_url+request)
 		data = response.json()
 		return data
-		#i = 0
-		#for drink in data['drinks']:
-			#Alcoholic_dict[data["drinks"][i]["idDrink"]] = data["drinks"][i]["strDrink"]
-			#i = i + 1
-		#print(Alcoholic_dict)
-	else: 
+	elif ans == 'alcoholic': 
 		#Alcoholic_dict = {}
 		request = ("filter.php?a=Alcoholic")
 		response = requests.get(api_url+request)
 		data = response.json()
 		return data
-		#i = 0
-		#for drink in data['drinks']:
-			#Alcoholic_dict[data["drinks"][i]["idDrink"]] = data["drinks"][i]["strDrink"]
-			#i = i + 1
-		#print(Alcoholic_dict)
 
 # --- Category function --- 
 def category(ans, ans2):
 	drink_counter = 0
-	#category_dict = {}
-	#request_id = ans2 
-	#request = ("lookup.php?i="+request_id)
+	category_array = []
 	category_data = alcoholic(ans)
-	#category_response = requests.get(api_url+request)
 	for drink in category_data["drinks"]:
 		request_id = category_data["drinks"][drink_counter]["idDrink"]
 		request = ("lookup.php?i="+request_id)
 		category_response = requests.get(api_url+request)
 		category_response_data = category_response.json()
-		#print(category_response_data)
-		#print(request_id)
-		#print(request)
-		if category_response_data['drinks'][drink_counter - 1]["strCategory"] == ans2:
-			del category_response_data['drinks'][drink_counter]
-			print("matches")
+		if category_response_data['drinks'][0]["strCategory"] == ans2:
+			category_array.append(category_response_data['drinks'][0]['idDrink'])
 		drink_counter += 1
-	print(category_response_data)
-	
-		#category_dict[category_data["drinks"][drink_counter]["idDrink"]] = category_data["drinks"][drink_counter]["strDrink"]
-		#x = x + 1 
+	#print(category_array)
+	return category_array
 
-	#print(category_dict)
+def ingrediants(ans, ans2, ans3):
+	results_array = [] 
+	compare_array = [] 
+	final_array = [] 
+	ingrediants_data = category(ans, ans2)
+	request = ("filter.php?i="+ans3)
+	ingrediants_response = requests.get(api_url+request)
+	ingrediants_response_data = ingrediants_response.json() #everything with desired ingrediant
+	if ingrediants_response_data['drinks'] == "None Found":
+		for noMatchDrink in ingrediants_data: 
+			request = ("lookup.php?i="+noMatchDrink)
+			final_response = requests.get(api_url+request)
+			final_data = final_response.json()
+			for x in final_data['drinks']: #goes through drinks of previous 2 Q's to and gets info desired ingrediants doesnt appear
+				final_array.append(x['idDrink'])
+				final_array.append(x['strDrink'])
+				final_array.append(x['strDrinkThumb'])
+		final_array.insert(0,"False List")		
+		return final_array 
+	else: 
+		for i in ingrediants_response_data['drinks']:
+			compare_array.append(i['idDrink'])
+		for x in ingrediants_data: # does the comparison and filters to get drinks that match request
+			if x in compare_array:
+				results_array.append(x)
+		if len(results_array) > 0:
+			for drink in results_array:
+				request = ("lookup.php?i="+drink)
+				final_response = requests.get(api_url+request)
+				final_data = final_response.json()
+				for y in final_data['drinks']: #goes through VALID results and gets info
+					final_array.append(y['idDrink'])
+					final_array.append(y['strDrink'])
+					final_array.append(y['strDrinkThumb'])
+		final_array.insert(0,"Correct Array")
+		print(final_array)
+		return(final_array)
 
-	'''
-	request = ("filter.php?c="+ans)
-	response = requests.get(api_url+request)
-	data = response.json()
-	i = 0
-	for drink in data['drinks']:
-		print(data["drinks"][i]["idDrink"])
-		print(data["drinks"][i]["strDrink"])
-		print(data["drinks"][i]["strDrinkThumb"])
-		print("")
-		i = i + 1
-		'''
-
-"""
-	elif ans == "cocktail":
-		request = ("filter.php?c=Cocktail")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	elif ans == "Milk / Float / Shake":
-		request = ("filter.php?c=Milk_/_Float_/_Shake")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	elif ans == "Other / Unknown":
-		request = ("filter.php?c=Other_/_Unknown")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	elif ans == "Cocoa":
-		request = ("filter.php?c=Cocoa")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	elif ans == "Shot":
-		request = ("filter.php?c=Milk_/_Float_/_Shake")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	elif ans == "Coffee / Tea":
-		request = ("filter.php?c=Coffee_/_Tea")
-		response = requests.get(api_urlkey+request)
-		json_data = json.loads(response.content)
-		print(json_data)
-	else:
-		print("End of it")
-
-"""
-def popular_drinks():
-	reqeuest = ("popular.php")
+def popular_drinks(body):
+	request = ("popular.php")
 	response = requests.get(api_url+request)
 	popular_drinks_selection = response.json()
 	return popular_drinks_selection
+
+def howtomake(id):
+	howtomake_array = []
+	request = ("lookup.php?i="+ id)
+	response = requests.get(api_url+request)
+	howtomake_data = response.json()
+	howtomake_array.append(howtomake_data['drinks'][0]['strDrinkThumb'])
+	howtomake_array.append(howtomake_data['drinks'][0]['strInstructions'])
+	return howtomake_array
 
 # --- Yelp API --- 
 
@@ -158,21 +108,20 @@ yelp_url='https://api.yelp.com/v3/businesses/search'
 def planmynight(zip):
 	# random bar based on zipcode
 	random_bar_counter = 0 
-	random_drink_counter = 0 
+	random_planmynight_array = []
 	params = {'term':'bar','location' : zip}
 	req = requests.get(yelp_url, params=params, headers=headers)
 	yelp_data = json.loads(req.content)
-	while random_bar_counter <= 5:
+	while random_bar_counter <= 4:
 		random_bar = random.choice(yelp_data['businesses'])
-		#return random_bar
-		pprint.pprint(random_bar)
+		random_planmynight_array.append(random_bar)
 		random_bar_counter += 1 
 	# random drink 
-	request = ("random.php")
+	request = ("randomselection.php")
 	response = requests.get(api_url+request)
-	while random_drink_counter <= 5:
-		random_drink = response.json()
-		pprint.pprint(random_drink)
-		#return random_drink
-		random_drink_counter += 1
-	#pprint.pprint(random_bar)
+	random_drinks = response.json()
+	random_planmynight_array.append(random_drinks)
+	pprint.pprint(random_planmynight_array)
+	return random_planmynight_array
+
+
